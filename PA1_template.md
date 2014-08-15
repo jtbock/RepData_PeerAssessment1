@@ -9,7 +9,8 @@ day.
 
 ## Loading and preprocessing the data
 First, a couple of needed libraries are loaded.
-```{r loadLibraries}
+
+```r
 library(plyr)
 library(ggplot2)
 ```
@@ -27,14 +28,14 @@ to facilitate later processing.
 
 (**N.B.** the stringsAsFactors option was set to FALSE in the *read* function 
 so the **date** field wouldn't be read as a factor.)
-```{r etlData}
+
+```r
 # Read in the data.  Set stringsAsFactors to be false to be able to transform
 # the date strings into date objects
 stepData<-read.csv(unz("activity.zip","activity.csv"),stringsAsFactors=FALSE)
 
 # Convert the date strings into Date objects
 stepData$date<-as.Date(stepData$date,"%Y-%m-%d")
-
 ```
 
 ## What is mean total number of steps taken per day?
@@ -44,7 +45,8 @@ are simply ignored.
 
 A histogram is created next, and it appears that 10000 - 15000 steps/per day
 is the most common range.
-```{r totalStepHist}
+
+```r
 # Sum up the total steps per day, to create the histogram
 stepHist<-aggregate(list(Steps=stepData$steps),by=list(Date=stepData$date),
                     sum,na.rm=TRUE)
@@ -52,12 +54,26 @@ hist(stepHist$Steps,xlab="Number of steps per day",col="red",
                           main="Number of Steps, Per Day")
 ```
 
+![plot of chunk totalStepHist](figure/totalStepHist.png) 
+
 For a more precise measurement of the number of steps per day, the mean
 and median are calculated:
-```{r totalStepMeasures}
+
+```r
 # Calculate/report the mean and median total number of steps per day
 mean(stepHist$Steps)
+```
+
+```
+## [1] 9354
+```
+
+```r
 median(stepHist$Steps)
+```
+
+```
+## [1] 10395
 ```
 As shown by the R output, the **mean** is 9354, and the **median** is 10395.
 
@@ -70,15 +86,17 @@ number of steps taken, averaged over all days. This required first
 aggregating and averaging the steps over each interval. Again, any missing
 data is ignored.  The result is plotted
 below.
-```{r avgDaily}
+
+```r
 #Aggregate the step data by interval, taking the mean for each interval
 meanByInterval<-aggregate(list(Steps=stepData$steps),
                           list(Interval=stepData$interval),mean,na.rm=TRUE)
 # Plot
 plot(meanByInterval$Interval,meanByInterval$Steps,type="l",xlab="Interval",
      ylab="Number of Steps",main="Average Number of Steps Taken, By Interval")
-
 ```
+
+![plot of chunk avgDaily](figure/avgDaily.png) 
 
 Daily activity begins around 5 a.m., and increases to a daily maximum over 
 200 in the morning before 10 a.m. The remainder of the day follows a jagged
@@ -86,12 +104,18 @@ curve, but generally ranging between 25 and 100 steps.  This activity falls
 off around 8:00 p.m., trending towards 0 as the evening progresses.
 
 Being more precise about the maximum:
-```{r 5MinMax}
+
+```r
 # Find the 5-minute interval which on average contains the maximum number of steps
 # First find the index where the maximum occur
 maxIndex<-which.max(meanByInterval$Steps)
 # Then access that row
 meanByInterval[maxIndex,]
+```
+
+```
+##     Interval Steps
+## 104      835 206.2
 ```
 This shows that, on average, the maximum number of steps is 206, and occurs
 at 8:35 a.m.
@@ -99,9 +123,14 @@ at 8:35 a.m.
 ## Imputing missing values
 As the missing values may introduce some bias, it may be useful to determine
 how many values are actually missing:
-```{r missingData}
+
+```r
 missing<-which(is.na(stepData$steps))
 length(missing)
+```
+
+```
+## [1] 2304
 ```
 As indicated in the R output, there are 2304 missing values.  It may be useful
 to impute these missing values.  The strategy chosen to fill in for the missing
@@ -109,7 +138,8 @@ data was simply to take the mean for each interval, and apply the specific
 interval's mean to any identical interval missing a value. A new dataframe
 containing the imputed data in place of the NAs is then used to create
 a step histogram.
-```{r imputedData}
+
+```r
 # Create function to use mean of the 5-minute interval to fill in the NAs
 imputedMean<-function(x) replace(x, is.na(x),mean(x, na.rm=TRUE))
 # Create new dataframe with imputed data
@@ -125,16 +155,30 @@ hist(imputedStepHist$Steps,xlab="Number of steps per day",col="red",
                        main="Number of Steps, Per Day")
 ```
 
+![plot of chunk imputedData](figure/imputedData.png) 
+
 Compared with the first histogram (without imputed data), the shape is basically
 the same, but there are some important differences.  The same range 
 (10000-15000) is still the most frequent, but its frequency has noticeably
 increased.  At the same time, the frequency for the first bin (range 0 - 5000) 
 has noticeably decreased.  Looking at the mean and median for the imputed
 data set:
-```{r imputedStepMeasures}
+
+```r
 # Calculate/report the mean and median total number of steps per day
 mean(imputedStepHist$Steps)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(imputedStepHist$Steps)
+```
+
+```
+## [1] 10766
 ```
 As indicated, the **mean** is 10766, and the **median** is also 10766. 
 This differs from the mean (9354) and median (10395) of the original 
@@ -153,7 +197,8 @@ set to *weekday* and dates corresponding to Saturday or Sunday set to *weekend*.
 After adding the factor, the step data was aggregated by interval and the new
 factor variable.  This aggregated step data was then plotted, conditioned
 on the weekday/weekend factor variable.
-```{r weekdays}
+
+```r
 # Set up a "weekend" vector to use in a test for the weekday
 weekend<-c('Saturday','Sunday')
 #First, add a new column
@@ -168,6 +213,8 @@ p<-p+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank
 p<-p+geom_line(color="blue") + labs(x="Interval",y="Number of Steps") + facet_grid(Category ~.)
 print(p)
 ```
+
+![plot of chunk weekdays](figure/weekdays.png) 
 
 Looking at the plots, one can see that the activity patterns between weekdays
 and weekends are different.  Activity levels start later and ramp up more slowly
