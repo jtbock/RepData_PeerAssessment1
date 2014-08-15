@@ -118,7 +118,7 @@ meanByInterval[maxIndex,]
 ## 104      835 206.2
 ```
 This shows that, on average, the maximum number of steps is 206, and occurs
-at 8:35 a.m.
+at 8:35 a.m. (the 835 interval).
 
 ## Imputing missing values
 As the missing values may introduce some bias, it may be useful to determine
